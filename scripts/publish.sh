@@ -3,15 +3,15 @@ set -euo pipefail
 
 BASE_DIR="/home/sebastien/ABLS-RPMS"
 ARCHES=("x86_64" "aarch64" "noarch")
-STAGING_DIR="$(mktemp -d "$BASE_DIR/.staging.XXXXXX")"
-PREV_DIR="$BASE_DIR/.published.prev"
+CLEAN_MODE=0
 
-cleanup() {
-  if [[ -d "$STAGING_DIR" ]]; then
-    rm -rf "$STAGING_DIR"
-  fi
-}
-trap cleanup EXIT
+if [[ "${1:-}" == "clean" || "${1:-}" == "--clean" ]]; then
+  CLEAN_MODE=1
+elif [[ -n "${1:-}" ]]; then
+  echo "ERROR: unknown argument: $1" >&2
+  echo "Usage: $0 [clean|--clean]" >&2
+  exit 1
+fi
 
 require_cmd() {
   local cmd="$1"
@@ -32,42 +32,37 @@ else
   exit 1
 fi
 
-mkdir -p "$STAGING_DIR/repo" "$STAGING_DIR/keys"
+mkdir -p "$BASE_DIR/published/repo" "$BASE_DIR/published/keys"
 
 for arch in "${ARCHES[@]}"; do
   src="$BASE_DIR/repo/$arch"
-  dst="$STAGING_DIR/repo/$arch"
+  dst="$BASE_DIR/published/repo/$arch"
 
   mkdir -p "$src" "$dst"
 
-  # Keep metadata aligned with current package pool for each architecture.
-  "$CREATEREPO_CMD" --update "$src" >/dev/null
-  rsync -a --delete "$src/" "$dst/"
+  if [[ "$CLEAN_MODE" -eq 1 ]]; then
+    find "$dst" -maxdepth 1 -type f -name "*.rpm" -delete
+    find "$dst" -maxdepth 1 -type f -name "*.src.rpm" -delete
+  fi
+
+  rsync -a "$src/" "$dst/"
+
+  # Keep metadata aligned with what is effectively published.
+  "$CREATEREPO_CMD" --update "$dst" >/dev/null
 done
 
 if [[ -f "$BASE_DIR/keys/RPM-GPG-KEY-ABLS" ]]; then
-  cp -f "$BASE_DIR/keys/RPM-GPG-KEY-ABLS" "$STAGING_DIR/keys/"
+  cp -f "$BASE_DIR/keys/RPM-GPG-KEY-ABLS" "$BASE_DIR/published/keys/"
 fi
 if [[ -f "$BASE_DIR/keys/RPM-GPG-KEY-ABLS.sha256" ]]; then
-  cp -f "$BASE_DIR/keys/RPM-GPG-KEY-ABLS.sha256" "$STAGING_DIR/keys/"
+  cp -f "$BASE_DIR/keys/RPM-GPG-KEY-ABLS.sha256" "$BASE_DIR/published/keys/"
 fi
 if [[ -f "$BASE_DIR/abls-rpms.repo" ]]; then
-  cp -f "$BASE_DIR/abls-rpms.repo" "$STAGING_DIR/"
+  cp -f "$BASE_DIR/abls-rpms.repo" "$BASE_DIR/published/"
 fi
 
-if [[ -d "$PREV_DIR" ]]; then
-  rm -rf "$PREV_DIR"
+if [[ "$CLEAN_MODE" -eq 1 ]]; then
+  echo "OK: published repository updated in-place in $BASE_DIR/published (clean mode)"
+else
+  echo "OK: published repository updated in-place in $BASE_DIR/published (incremental mode)"
 fi
-
-if [[ -d "$BASE_DIR/published" ]]; then
-  mv "$BASE_DIR/published" "$PREV_DIR"
-fi
-
-mv "$STAGING_DIR" "$BASE_DIR/published"
-STAGING_DIR=""
-
-if [[ -d "$PREV_DIR" ]]; then
-  rm -rf "$PREV_DIR"
-fi
-
-echo "OK: published repository snapshot updated in $BASE_DIR/published"
