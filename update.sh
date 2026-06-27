@@ -18,6 +18,7 @@ else
 	"$SCRIPT_DIR/publish.sh"
 fi
 "$SCRIPT_DIR/verify-repo.sh"
+git add *.rpm
 
 if [[ "$CLEAN_MODE" -eq 1 ]]; then
 	echo "OK: update completed (clean + publish + verify)"
