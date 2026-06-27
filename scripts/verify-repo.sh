@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_DIR="/home/sebastien/ABLS-RPMS"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 ARCHES=("x86_64" "aarch64" "noarch")
 PUBLIC_DIR="$BASE_DIR/public"
 KEY_FILE="$PUBLIC_DIR/keys/RPM-GPG-KEY-ABLS"
@@ -33,8 +34,15 @@ for arch in "${ARCHES[@]}"; do
   fi
 done
 
+# Optional client-side sanity check with dnf:
+# - --disablerepo='*' disables every repo configured on the host, so we avoid
+#   mixing with system repos and only test THIS local ABLS repo path.
+# - --repofrompath defines a temporary repo named "abls-rpms" pointing to
+#   public/x86_64 via file://.
+# - --enablerepo='abls-rpms' enables only that temporary repo for makecache.
+# This confirms dnf can read repo metadata in a real client flow.
 if command -v dnf >/dev/null 2>&1 && [[ -f "$PUBLISHED_REPO_FILE" ]]; then
-  dnf -q --disablerepo='*' --repofrompath='abls-rpms,file:///home/sebastien/ABLS-RPMS/public/x86_64' --enablerepo='abls-rpms' makecache >/dev/null || true
+  dnf -q --disablerepo='*' --repofrompath="abls-rpms,file://$PUBLIC_DIR/x86_64" --enablerepo='abls-rpms' makecache >/dev/null || true
 fi
 
 echo "OK: repository checks completed"

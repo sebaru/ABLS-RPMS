@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_DIR="/home/sebastien/ABLS-RPMS"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 PUBLIC_DIR="$BASE_DIR/public"
 ARCHES=("x86_64" "aarch64" "noarch")
 CLEAN_MODE=0
@@ -63,7 +64,7 @@ EOF
 fi
 
 if [[ "$CLEAN_MODE" -eq 1 ]]; then
-  echo "OK: repository updated in-place in $PUBLIC_DIR (clean mode)"
+  echo "OK: repository updated in-place in public/ (clean mode)"
 else
-  echo "OK: repository updated in-place in $PUBLIC_DIR (incremental mode)"
+  echo "OK: repository updated in-place in public/ (incremental mode)"
 fi
