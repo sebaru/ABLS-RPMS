@@ -12,7 +12,6 @@ elif [[ -n "${1:-}" ]]; then
 	exit 1
 fi
 
-"$SCRIPT_DIR/bootstrap-repo.sh"
 if [[ "$CLEAN_MODE" -eq 1 ]]; then
 	"$SCRIPT_DIR/publish.sh" --clean
 else
@@ -21,7 +20,7 @@ fi
 "$SCRIPT_DIR/verify-repo.sh"
 
 if [[ "$CLEAN_MODE" -eq 1 ]]; then
-	echo "OK: update completed (clean metadata + publish + verify)"
+	echo "OK: update completed (clean + publish + verify)"
 else
-	echo "OK: update completed (metadata + publish + verify)"
+	echo "OK: update completed (publish + verify)"
 fi

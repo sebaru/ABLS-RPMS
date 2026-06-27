@@ -4,27 +4,26 @@ Depot RPM du projet ABLS-HABITAT.
 
 ## Arborescence
 
-- repo/x86_64
-- repo/aarch64
-- repo/noarch
-- keys
+- public/x86_64
+- public/aarch64
+- public/noarch
+- public/keys
 - scripts
-- published
 
 ## Workflow
 
-1. Executer scripts/bootstrap-repo.sh
-2. Exporter la clef publique GPG dans keys/RPM-GPG-KEY-ABLS
-3. Executer ./update.sh
+1. Deposer les RPM directement dans `public/$arch` (`x86_64`, `aarch64`, `noarch`)
+2. Exporter la clef publique GPG dans `public/keys/RPM-GPG-KEY-ABLS`
+3. Executer `./update.sh`
 
 Mode par defaut (`./update.sh`):
 
-- Les RPM sont deposes directement dans `repo/*`.
-- Publication in-place vers `published/`.
+- Mise a jour in-place des metadonnees dans `public/*`.
+- Mise a jour automatique du checksum `public/keys/RPM-GPG-KEY-ABLS.sha256`.
 
 Mode reset explicite (`./update.sh clean`):
 
-- Nettoyage des RPM publies avant republication complete.
+- Nettoyage des RPM presents dans `public/*` avant regeneration complete des metadonnees.
 
 Verification finale:
 
@@ -32,15 +31,15 @@ Verification finale:
 
 ## Configuration client
 
-Exemple de fichier repo client: abls-rpms.repo
+Exemple de fichier repo client: `public/abls-rpms.repo`
 
 - gpgcheck=1: verification de signature des paquets
 - repo_gpgcheck=0: verification de metadonnees desactivee (a activer plus tard si repodata signee)
 
 ## Publication
 
-Le repertoire published est la cible exposee en HTTP.
+Le repertoire `public/` est la cible exposee en HTTP.
 
-Le script `publish.sh` met a jour `published/` en place.
-En mode normal, il conserve les RPM deja publies et ajoute/met a jour ceux presents dans `repo/*`.
-En mode `clean`, il supprime les RPM publies avant republication complete.
+Le script `publish.sh` met a jour `public/` en place.
+En mode normal, il conserve les RPM deja presents et met a jour les metadonnees.
+En mode `clean`, il supprime les RPM avant republication complete.
