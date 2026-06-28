@@ -8,16 +8,13 @@ DEB_BASE="$PUBLIC_DIR/deb"
 DROP_DIR="$BASE_DIR/deb-packages"
 CONF_DIR="$DEB_BASE/conf"
 DIST_FILE="$CONF_DIR/distributions"
-CLEAN_MODE=0
 SUITES=("bookworm" "trixie")
 ARCHES="amd64 arm64 armhf"
 GPG_KEY_ID="6C86F2C11305554A61A2221512671FDB87025D1B"
 
-if [[ "${1:-}" == "clean" || "${1:-}" == "--clean" ]]; then
-  CLEAN_MODE=1
-elif [[ -n "${1:-}" ]]; then
+if [[ -n "${1:-}" ]]; then
   echo "ERROR: unknown argument: $1" >&2
-  echo "Usage: $0 [clean|--clean]" >&2
+  echo "Usage: $0" >&2
   exit 1
 fi
 
@@ -61,10 +58,6 @@ fi
 for suite in "${SUITES[@]}"; do
   mkdir -p "$DROP_DIR/$suite"
 done
-
-if [[ "$CLEAN_MODE" -eq 1 ]]; then
-  rm -rf "$DEB_BASE/db" "$DEB_BASE/dists" "$DEB_BASE/pool"
-fi
 
 published=0
 for suite in "${SUITES[@]}"; do

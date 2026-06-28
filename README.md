@@ -1,30 +1,27 @@
-# ABLS-RPMS
+# ABLS-PKGS
 
 Depot RPM du projet ABLS-HABITAT.
 
 ## Arborescence
 
-- public/x86_64
-- public/aarch64
-- public/noarch
+- public/rpms/x86_64
+- public/rpms/aarch64
+- public/rpms/noarch
 - public/deb
-- public/keys
+- public/rpms/keys
 - scripts
 
 ## Workflow
 
-1. Deposer les RPM directement dans `public/$arch` (`x86_64`, `aarch64`, `noarch`)
-2. Exporter la clef publique GPG dans `public/keys/RPM-GPG-KEY-ABLS`
+1. Deposer les RPM directement dans `public/rpms/$arch` (`x86_64`, `aarch64`, `noarch`)
+2. Exporter la clef publique GPG dans `public/rpms/keys/RPM-GPG-KEY-ABLS`
 3. Executer `./update.sh`
 
 Mode par defaut (`./update.sh`):
 
-- Mise a jour in-place des metadonnees dans `public/*`.
-- Mise a jour automatique du checksum `public/keys/RPM-GPG-KEY-ABLS.sha256`.
-
-Mode reset explicite (`./update.sh clean`):
-
-- Nettoyage des RPM presents dans `public/*` avant regeneration complete des metadonnees.
+- Mise a jour in-place des metadonnees dans `public/rpms/*`.
+- Signature automatique de `repodata/repomd.xml` pour chaque architecture.
+- Mise a jour automatique du checksum `public/rpms/keys/RPM-GPG-KEY-ABLS.sha256`.
 
 Verification finale:
 
@@ -44,24 +41,22 @@ Arborescence DEB geree par `reprepro`:
 Workflow DEB:
 
 1. Deposer les `.deb` dans `deb-packages/bookworm/` ou `deb-packages/trixie/`
-2. Executer `./update.sh` (ou `./scripts/publish-deb.sh`)
+2. Executer `./update.sh` (ou `./scripts/update-deb.sh`)
 
 Notes:
 
-- Si `ABLS_GPG_KEYID` est defini, `publish-deb.sh` configure la signature des metadata Release/InRelease.
-- Sans `ABLS_GPG_KEYID`, le depot est publie sans signature metadata.
+- Le depot DEB est signe avec la meme clef GPG que le depot RPM.
 
 ## Configuration client
 
 Exemple de fichier repo client: `public/abls-rpms.repo`
 
 - gpgcheck=1: verification de signature des paquets
-- repo_gpgcheck=0: verification de metadonnees desactivee (a activer plus tard si repodata signee)
+- repo_gpgcheck=1: verification de signature des metadonnees RPM activee
 
 ## Publication
 
 Le repertoire `public/` est la cible exposee en HTTP.
 
-Le script `publish.sh` met a jour `public/` en place.
+Le script `update-rpm.sh` met a jour `public/rpms/` en place.
 En mode normal, il conserve les RPM deja presents et met a jour les metadonnees.
-En mode `clean`, il supprime les RPM avant republication complete.
